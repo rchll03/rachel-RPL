@@ -20,6 +20,8 @@ create table transaksi(
     tanggal date not null,
     total int not null,
     idUser int,
+    bayar INT NOT NULL,
+    kembalian INT NOT NULL,
     foreign key (idUser) references pengguna(idUser)
     on delete restrict
 );
