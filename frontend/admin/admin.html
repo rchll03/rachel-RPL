@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -8,20 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/admin.css') }}">
-
 </head>
 
 <body class="bg-light">
 
 
-<div class="container mt-5">
-
-    <div class="card shadow">
+<div class="container mt-4">
 
 
-        <!-- Header -->
+    <!-- Header -->
+    <div class="card shadow mb-4">
+
         <div class="card-header d-flex justify-content-between align-items-center">
 
             <h3 class="mb-0">
@@ -29,7 +25,6 @@
                 Dashboard Admin
 
             </h3>
-
 
             <a href="/logout"
                class="btn btn-danger">
@@ -40,173 +35,301 @@
 
         </div>
 
+    </div>
 
 
-        <!-- Content -->
+
+    <!-- Menu -->
+    <div class="row g-3 mb-4">
+
+
+        <div class="col-md-3">
+
+            <a href="/kelola_user"
+               class="text-decoration-none">
+
+                <div class="card text-center shadow-sm">
+
+                    <div class="card-body">
+
+                        <h4>👤</h4>
+
+                        <h5>Kelola User</h5>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <a href="/kelola_produk"
+               class="text-decoration-none">
+
+                <div class="card text-center shadow-sm">
+
+                    <div class="card-body">
+
+                        <h4>🍽️</h4>
+
+                        <h5>Kelola Produk</h5>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <a href="/pembelian"
+               class="text-decoration-none">
+
+                <div class="card text-center shadow-sm">
+
+                    <div class="card-body">
+
+                        <h4>🛒</h4>
+
+                        <h5>Pembelian</h5>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <a href="/inventory"
+               class="text-decoration-none">
+
+                <div class="card text-center shadow-sm">
+
+                    <div class="card-body">
+
+                        <h4>🏭</h4>
+
+                        <h5>Kelola Gudang</h5>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- Statistik -->
+    <div class="row g-3 mb-4">
+
+
+        <div class="col-md-3">
+
+            <div class="card text-center shadow-sm">
+
+                <div class="card-body">
+
+                    <h6>Total User</h6>
+
+                    <h2>
+
+                        {{ totalUser }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <div class="card text-center shadow-sm">
+
+                <div class="card-body">
+
+                    <h6>Total Produk</h6>
+
+                    <h2>
+
+                        {{ totalProduk }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <div class="card text-center shadow-sm">
+
+                <div class="card-body">
+
+                    <h6>Transaksi Hari Ini</h6>
+
+                    <h2>
+
+                        {{ totalTransaksi }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="col-md-3">
+
+            <div class="card text-center shadow-sm">
+
+                <div class="card-body">
+
+                    <h6>Pembelian Hari Ini</h6>
+
+                    <h2>
+
+                        {{ totalPembelian }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- Stok Tipis -->
+    <div class="card shadow">
+
+
+        <div class="card-header bg-warning">
+
+            <h5 class="mb-0">
+
+                ⚠️ Stok Bahan Baku Menipis
+
+            </h5>
+
+        </div>
+
+
+
         <div class="card-body">
 
 
-            <div class="row g-4">
+            {% if stokTipis %}
+
+                <table class="table table-bordered">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Nama Bahan</th>
+
+                            <th>Stok</th>
+
+                            <th>Satuan</th>
+
+                        </tr>
+
+                    </thead>
 
 
-                <!-- Kelola user -->
-                <div class="col-md-4">
+                    <tbody>
 
-                    <a href="/kelola_user"
-                       class="menu-card text-decoration-none">
+                        {% for bahan in stokTipis %}
 
-                        <div class="card text-center shadow-sm">
+                        <tr>
 
-                            <div class="card-body">
+                            <!--
+                            index disesuaikan:
+                            0 = idBahan
+                            1 = namaBahan
+                            2 = stok
+                            3 = satuan
+                            -->
 
-                                <h4>
+                            <td>
 
-                                    Kelola User
+                                {{ bahan[1] }}
 
-                                </h4>
+                            </td>
 
-                            </div>
+                            <td>
 
-                        </div>
+                                {{ bahan[2] }}
 
-                    </a>
+                            </td>
 
-                </div>
+                            <td>
 
+                                {{ bahan[3] }}
 
+                            </td>
 
-                <!-- Kelola produk -->
-                <div class="col-md-4">
+                        </tr>
 
-                    <a href="/kelola_produk"
-                       class="menu-card text-decoration-none">
+                        {% endfor %}
 
-                        <div class="card text-center shadow-sm">
+                    </tbody>
 
-                            <div class="card-body">
-
-                                <h4>
-
-                                    Kelola Produk
-
-                                </h4>
-
-                            </div>
-
-                        </div>
-
-                    </a>
-
-                </div>
+                </table>
 
 
+            {% else %}
 
-                <!-- Inventory -->
-                <div class="col-md-4">
+                <div class="alert alert-success mb-0">
 
-                    <a href="/inventory"
-                       class="menu-card text-decoration-none">
-
-                        <div class="card text-center shadow-sm">
-
-                            <div class="card-body">
-
-                                <h4>
-
-                                    Inventory
-
-                                </h4>
-
-                            </div>
-
-                        </div>
-
-                    </a>
+                    Semua stok aman.
 
                 </div>
 
+            {% endif %}
 
-            </div>
-
-
-        </div>
-
-        <div class="row mt-4">
-
-    <div class="col-md-3">
-
-        <div class="card shadow-sm text-center">
-
-            <div class="card-body">
-
-                <h6>Total User</h6>
-
-                <h3>{{ totalUser }}</h3>
-
-            </div>
 
         </div>
 
     </div>
 
-
-    <div class="col-md-3">
-
-        <div class="card shadow-sm text-center">
-
-            <div class="card-body">
-
-                <h6>Total Produk</h6>
-
-                <h3>{{ totalProduk }}</h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-3">
-
-        <div class="card shadow-sm text-center">
-
-            <div class="card-body">
-
-                <h6>Transaksi Hari Ini</h6>
-
-                <h3>{{ totalTransaksi }}</h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="col-md-3">
-
-        <div class="card shadow-sm text-center">
-
-            <div class="card-body">
-
-                <h6>Pembelian Hari Ini</h6>
-
-                <h3>{{ totalPembelian }}</h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-    </div>
 
 </div>
 
-
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 
 </body>
 </html>
