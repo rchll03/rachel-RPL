@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request,redirect,session
+from datetime import date
+
+from flask import Flask, render_template, request,redirect,session, url_for
 import mysql.connector
 import os
 
@@ -553,239 +555,213 @@ def edit_user():
 
     return redirect('/kelola_user')
 
-
-
-# @app.route("/pembelian", methods=["GET", "POST"])
-# def pembelian():
-
-#     if request.method == "POST":
-
-#         nama_barang = request.form["nama_barang"]
-#         supplier = request.form["supplier"]
-
-#         qty = float(
-#             request.form["qty"]
-#         )
-
-#         satuan = request.form["satuan"]
-
-#         tipe = request.form["tipe"]
-
-#         harga_beli = int(
-#             request.form["harga_beli"]
-#         )
-
-
-#         # ====================
-#         # CONVERT SATUAN
-#         # ====================
-
-#         if satuan == "kg":
-
-#             qty = qty * 1000
-#             satuan = "gram"
-
-
-#         elif satuan == "liter":
-
-#             qty = qty * 1000
-#             satuan = "ml"
-
-
-#         subtotal = qty * harga_beli
-
-
-#         # ====================
-#         # HEADER PEMBELIAN
-#         # ====================
-
-#         pembelian_baru = Pembelian(
-
-#             tanggal=date.today(),
-
-#             total=subtotal,
-
-#             namaSupplier=supplier,
-
-#             idUser=session["idUser"]
-
-#         )
-
-#         db.session.add(
-#             pembelian_baru
-#         )
-
-#         db.session.flush()
-
-
-#         # ====================
-#         # BARANG LANGSUNG
-#         # ====================
-
-#         if tipe == "langsung":
-
-#             produk = produk.query.filter_by(
-
-#                 namaProduk=nama_barang
-
-#             ).first()
-
-
-#             if not produk:
-
-#                 return "Produk tidak ditemukan"
-
-
-#             produk.stok += qty
-
-
-#             detail = detailPembelian(
-
-#                 idPembelian=
-#                 pembelian_baru.idPembelian,
-
-#                 idProduk=
-#                 produk.idProduk,
-
-#                 tipeBarang=
-#                 "langsung",
-
-#                 jumlah=
-#                 qty,
-
-#                 hargaBeli=
-#                 harga_beli,
-
-#                 subtotal=
-#                 subtotal
-
-#             )
-
-
-#         # ====================
-#         # BAHAN RACIKAN
-#         # ====================
-
-#         else:
-
-#             bahan = bahanBaku.query.filter_by(
-
-#                 namaBahan=nama_barang
-
-#             ).first()
-
-
-#             if not bahan:
-
-#                 return "Bahan tidak ditemukan"
-
-
-#             bahan.stok += qty
-
-
-#             detail = detailPembelian(
-
-#                 idPembelian=
-#                 pembelian_baru.idPembelian,
-
-#                 idBahan=
-#                 bahan.idBahan,
-
-#                 tipeBarang=
-#                 "racikan",
-
-#                 jumlah=
-#                 qty,
-
-#                 hargaBeli=
-#                 harga_beli,
-
-#                 subtotal=
-#                 subtotal
-
-#             )
-
-
-#         db.session.add(
-#             detail
-#         )
-
-#         db.session.commit()
-
-
-#         return redirect(
-#             "/pembelian"
-#         )
-
-
-# @app.route("/inventory")
-# def inventory():
-
-#     barang_langsung = produk.query.filter_by(
-#         tipeProduk="langsung"
-#     ).all()
-
-
-#     bahan_racikan = bahanBaku.query.all()
-
-
-#     return render_template(
-
-#         "inventory.html",
-
-#         barang_langsung=barang_langsung,
-
-#         bahan_racikan=bahan_racikan
-
-#     )
-
-@app.route('/pembelian', methods=['GET', 'POST'])
+@app.route('/pembelian')
 def pembelian():
-
-    if 'idUser' not in session:
-        return redirect('/')
-
-    if session['akses'] != "admin":
-        return "Akses ditolak"
 
     cursor = db.cursor()
 
-    if request.method == 'POST':
+    cursor.execute("""
+        SELECT
+            p.idPembelian,
+            p.tanggal,
+            p.namaSupplier,
 
-        namaBarang = request.form['nama_barang']
-        supplier = request.form['supplier']
-        qty = request.form['qty']
-        satuan = request.form['satuan']
-        tipe = request.form['tipe']
+            b.namaBahan,
 
-        # INSERT KE TABEL BAHAN BAKU
+            d.jumlah,
+            d.hargaBeli,
+            d.subtotal,
+
+            p.total
+
+        FROM pembelian p
+
+        LEFT JOIN detailPembelian d
+            ON p.idPembelian = d.idPembelian
+
+        LEFT JOIN bahanBaku b
+            ON d.idBahan = b.idBahan
+
+        ORDER BY p.idPembelian DESC
+    """)
+
+    riwayat = cursor.fetchall()
+
+    return render_template(
+        'admin/pembelian.html',
+        riwayat=riwayat
+    )
+
+@app.route('/simpan_pembelian', methods=['POST'])
+def simpan_pembelian():
+
+    cursor = db.cursor()
+
+    tanggal = date.today()
+
+    supplier = request.form['supplier']
+
+    namaBarang = request.form.getlist('nama_barang[]')
+    jumlah = request.form.getlist('jumlah[]')
+    satuan = request.form.getlist('satuan[]')
+    hargaBeli = request.form.getlist('harga_beli[]')
+
+    total = 0
+
+    # hitung total semua barang
+    for i in range(len(namaBarang)):
+
+        subtotal = int(jumlah[i]) * int(hargaBeli[i])
+
+        total += subtotal
+
+    # simpan tabel pembelian
+    cursor.execute("""
+        INSERT INTO pembelian
+        (
+            tanggal,
+            total,
+            namaSupplier
+        )
+        VALUES (%s,%s,%s)
+    """, (
+        tanggal,
+        total,
+        supplier
+    ))
+
+    idPembelian = cursor.lastrowid
+
+    # simpan detail pembelian
+    for i in range(len(namaBarang)):
+
+        subtotal = int(jumlah[i]) * int(hargaBeli[i])
+
+        # cek bahan baku
         cursor.execute("""
-            INSERT INTO bahanbaku
+            SELECT idBahan
+            FROM bahanBaku
+            WHERE namaBahan = %s
+        """, (namaBarang[i],))
+
+        bahan = cursor.fetchone()
+
+        # jika belum ada bahan baku
+        if bahan is None:
+
+            cursor.execute("""
+                INSERT INTO bahanBaku
+                (
+                    namaBahan,
+                    stok,
+                    satuan
+                )
+                VALUES (%s,%s,%s)
+            """, (
+                namaBarang[i],
+                jumlah[i],
+                satuan[i]
+            ))
+
+            idBahan = cursor.lastrowid
+
+        else:
+
+            idBahan = bahan[0]
+
+            # update stok
+            cursor.execute("""
+                UPDATE bahanBaku
+                SET stok = stok + %s
+                WHERE idBahan = %s
+            """, (
+                jumlah[i],
+                idBahan
+            ))
+
+        # simpan detail
+        cursor.execute("""
+            INSERT INTO detailPembelian
             (
-                namaBahan,
-                stok,
-                satuan,
-                tipe
+                idPembelian,
+                idBahan,
+                jumlah,
+                hargaBeli,
+                subtotal
             )
-            VALUES
-            (
-                %s,
-                %s,
-                %s,
-                %s
-            )
+            VALUES (%s,%s,%s,%s,%s)
         """, (
-            namaBarang,
-            qty,
-            satuan,
-            tipe
+            idPembelian,
+            idBahan,
+            jumlah[i],
+            hargaBeli[i],
+            subtotal
         ))
 
-        db.commit()
+    db.commit()
 
-        return redirect('/pembelian')
+    return redirect('/pembelian')
 
-    return render_template('admin/pembelian.html')
+@app.route('/hapus_pembelian/<id>')
+def hapus_pembelian(id):
+
+    cursor = db.cursor()
+
+    cursor.execute("""
+        DELETE FROM pembelian
+        WHERE idPembelian = %s
+    """, (id,))
+
+    db.commit()
+
+    return redirect('admin/pembelian')
+
+@app.route('/edit_pembelian/<id>', methods=['POST'])
+def edit_pembelian(id):
+
+    cursor = db.cursor()
+
+    namaSupplier = request.form['namaSupplier']
+    namaBarang = request.form['namaBarang']
+    jumlah = int(request.form['jumlah'])
+    hargaBeli = int(request.form['hargaBeli'])
+
+    subtotal = jumlah * hargaBeli
+    total = subtotal
+
+    # update pembelian
+    cursor.execute("""
+        UPDATE pembelian
+        SET
+            namaSupplier = %s,
+            total = %s
+        WHERE idPembelian = %s
+    """, (
+        namaSupplier,
+        total,
+        id
+    ))
+
+    # update detail
+    cursor.execute("""
+        UPDATE detailpembelian
+        SET
+            idBahan = %s,
+            jumlah = %s,
+            hargaBeli = %s,
+            subtotal = %s
+        WHERE idPembelian = %s
+    """, (
+        namaBarang,
+        jumlah,
+        hargaBeli,
+        subtotal,
+        id
+    ))
+
+    db.commit()
+
+    return redirect('admin/pembelian')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
     <meta charset="UTF-8">
@@ -10,167 +11,472 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-
-        body{
-            background:#f5f7fb;
+        body {
+            background: #f4f6f9;
         }
 
-        .card-custom{
-            border:none;
-            border-radius:15px;
-            box-shadow:0 2px 10px rgba(0,0,0,.08);
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
+        .table thead {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .btn-tambah {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            padding: 0;
+        }
     </style>
 
 </head>
+
 <body>
 
-<div class="container py-5">
+    <div class="container mt-4">
 
-    <div class="row justify-content-center">
+        <!-- JUDUL -->
+        <div class="card shadow p-2 mb-4">
 
-        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center">
 
-            <div class="card card-custom p-4">
+                <div>
 
-                <h3 class="mb-4">
-                    Tambah Pembelian
-                </h3>
+                    <h3 class="mb-0">
+                        Pembelian Barang
+                    </h3>
 
+                </div>
 
-                <form method="POST">
+                <a href="/admin" class="btn btn-secondary">
 
-                    <!-- Nama Barang -->
-                    <div class="mb-3">
+                    ← Kembali
 
-                        <label>
-                            Nama Barang
-                        </label>
-
-                        <input
-                                type="text"
-                                name="nama_barang"
-                                class="form-control"
-                                required>
-
-                    </div>
-
-
-
-                    <!-- Supplier -->
-                    <div class="mb-3">
-
-                        <label>
-                            Nama Supplier
-                        </label>
-
-                        <input
-                                type="text"
-                                name="supplier"
-                                class="form-control"
-                                required>
-
-                    </div>
-
-
-
-                    <!-- Qty -->
-                    <div class="mb-3">
-
-                        <label>
-                            Qty
-                        </label>
-
-                        <input
-                                type="number"
-                                name="qty"
-                                class="form-control"
-                                required>
-
-                    </div>
-
-
-
-                    <!-- Satuan -->
-                    <div class="mb-3">
-
-                        <label>
-                            Satuan
-                        </label>
-
-                        <select
-                                name="satuan"
-                                class="form-select"
-                                required>
-
-                            <option value="pcs">
-                                PCS
-                            </option>
-
-                            <option value="kg">
-                                KG
-                            </option>
-
-                            <option value="liter">
-                                Liter
-                            </option>
-
-                            <option value="gram">
-                                Gram
-                            </option>
-
-                            <option value="ml">
-                                ML
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-
-                    <!-- Tipe -->
-                    <div class="mb-4">
-
-                        <label>
-                            Tipe Barang
-                        </label>
-
-                        <select
-                                name="tipe"
-                                class="form-select"
-                                required>
-
-                            <option value="langsung">
-                                Langsung
-                            </option>
-
-                            <option value="racikan">
-                                Racikan
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-
-                    <button class="btn btn-primary w-100">
-
-                        Simpan Pembelian
-
-                    </button>
-
-                </form>
+                </a>
 
             </div>
 
         </div>
 
-    </div>
 
-</div>
+        <!-- FORM PEMBELIAN -->
+        <div class="card card-custom p-4 mb-5">
+
+            <form action="/simpan_pembelian" method="POST">
+
+                <!-- HEADER TRANSAKSI -->
+                <div class="row mb-4">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Tanggal
+                        </label>
+
+                        <input type="date" name="tanggal" class="form-control" required>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Supplier
+                        </label>
+
+                        <input type="text" name="supplier" class="form-control" placeholder="Masukkan nama supplier"
+                            required>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TABEL DETAIL -->
+                <div class="table-responsive">
+
+                    <table class="table table-bordered align-middle" id="tabelBarang">
+
+                        <thead class="text-center">
+
+                            <tr>
+
+                                <th width="30%">
+                                    Nama Barang
+                                </th>
+
+                                <th width="15%">
+                                    Jumlah
+                                </th>
+
+                                <th width="15%">
+                                    Satuan
+                                </th>
+
+                                <th width="15%">
+                                    Harga Beli
+                                </th>
+
+                                <th width="15%">
+                                    Sub Total
+                                </th>
+
+                                <th width="10%">
+                                    Aksi
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+
+                                <td>
+
+                                    <input type="text" name="nama_barang[]" class="form-control"
+                                        placeholder="Nama barang" required>
+
+                                </td>
+
+                                <td>
+
+                                    <input type="number" name="jumlah[]" class="form-control jumlah" value="1" min="1"
+                                        required>
+
+                                </td>
+
+                                <!-- SATUAN -->
+                                <td>
+
+                                    <select name="satuan[]" class="form-select" required>
+
+                                        <option value="">
+                                            Pilih
+                                        </option>
+
+                                        <option value="Kg">
+                                            Kg
+                                        </option>
+
+                                        <option value="Gram">
+                                            Gram
+                                        </option>
+
+                                        <option value="Liter">
+                                            Liter
+                                        </option>
+
+                                        <option value="Ml">
+                                            Ml
+                                        </option>
+
+                                        <option value="Pcs">
+                                            Pcs
+                                        </option>
+
+                                    </select>
+
+                                </td>
+
+                                <td>
+
+                                    <input type="number" name="harga_beli[]" class="form-control harga" value="0"
+                                        min="0" required>
+
+                                </td>
+
+                                <td>
+
+                                    <input type="text" class="form-control subtotal" value="0" readonly>
+
+                                </td>
+
+                                <td class="text-center">
+
+                                    <button type="button" class="btn btn-danger btn-sm hapus">
+
+                                        Hapus
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- BUTTON TAMBAH -->
+                <div class="mb-4">
+
+                    <button type="button" class="btn btn-primary btn-tambah" id="tambahBaris">
+
+                        +
+
+                    </button>
+
+                </div>
+
+
+                <!-- TOTAL -->
+                <div class="row justify-content-end">
+
+                    <div class="col-md-4">
+
+                        <div class="card bg-light border-0">
+
+                            <div class="card-body">
+
+                                <h5 class="fw-bold mb-3">
+                                    Total Pembelian
+                                </h5>
+
+                                <input type="text" id="grandTotal" class="form-control form-control-lg fw-bold"
+                                    value="0" readonly>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BUTTON -->
+                <div class="mt-4 text-end">
+
+                    <button class="btn btn-success px-5">
+
+                        Simpan Pembelian
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- RIWAYAT PEMBELIAN -->
+        <div class="card card-custom p-4">
+
+            <h4 class="fw-bold mb-4">
+                Riwayat Pembelian
+            </h4>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Supplier</th>
+                            <th>Total</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for data in riwayat %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+                            <td>
+                                {{ data[1] }}
+                            </td>
+
+                            <td>
+                                {{ data[2] }}
+                            </td>
+
+                            <td>
+                                Rp {{ data[7] }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <script>
+
+            // TAMBAH BARIS
+            document.getElementById('tambahBaris').addEventListener('click', function () {
+
+                let tbody = document.querySelector('#tabelBarang tbody');
+
+                let tr = document.createElement('tr');
+
+                tr.innerHTML = `
+
+    <td>
+        <input
+            type="text"
+            name="nama_barang[]"
+            class="form-control"
+            required>
+    </td>
+
+    <td>
+        <input
+            type="number"
+            name="jumlah[]"
+            class="form-control jumlah"
+            value="1"
+            min="1"
+            required>
+    </td>
+
+    <td>
+
+        <select
+            name="satuan[]"
+            class="form-select"
+            required>
+
+            <option value="">
+                Pilih
+            </option>
+
+            <option value="Kg">
+                Kg
+            </option>
+
+            <option value="Gram">
+                Gram
+            </option>
+
+            <option value="Liter">
+                Liter
+            </option>
+
+            <option value="Ml">
+                Ml
+            </option>
+
+            <option value="Pcs">
+                Pcs
+            </option>
+
+        </select>
+
+    </td>
+
+    <td>
+        <input
+            type="number"
+            name="harga_beli[]"
+            class="form-control harga"
+            value="0"
+            min="0"
+            required>
+    </td>
+
+    <td>
+        <input
+            type="text"
+            class="form-control subtotal"
+            value="0"
+            readonly>
+    </td>
+
+    <td class="text-center">
+        <button
+            type="button"
+            class="btn btn-danger btn-sm hapus">
+
+            Hapus
+
+        </button>
+    </td>
+
+`;
+                tbody.appendChild(tr);
+
+            });
+
+
+
+            // HITUNG TOTAL
+            document.addEventListener('input', function () {
+
+                hitungTotal();
+
+            });
+
+
+            function hitungTotal() {
+
+                let rows = document.querySelectorAll('#tabelBarang tbody tr');
+
+                let grandTotal = 0;
+
+                rows.forEach(function (row) {
+
+                    let jumlah = row.querySelector('.jumlah').value || 0;
+                    let harga = row.querySelector('.harga').value || 0;
+
+                    let subtotal = jumlah * harga;
+
+                    row.querySelector('.subtotal').value = subtotal;
+
+                    grandTotal += subtotal;
+
+                });
+
+                document.getElementById('grandTotal').value = grandTotal;
+
+            }
+
+
+
+            // HAPUS BARIS
+            document.addEventListener('click', function (e) {
+
+                if (e.target.classList.contains('hapus')) {
+
+                    e.target.closest('tr').remove();
+
+                    hitungTotal();
+
+                }
+
+            });
+
+        </script>
 
 </body>
+
 </html>
