@@ -13,7 +13,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="123",
-    database="db_kopiko"
+    database="db_kopiko2"
 )
 
 cursor = db.cursor()
@@ -73,37 +73,39 @@ def admin():
 
     cursor = db.cursor()
 
+    # total user
     cursor.execute(
         "SELECT COUNT(*) FROM pengguna"
     )
     totalUser = cursor.fetchone()[0]
 
-
+    # total produk/menu
     cursor.execute(
         "SELECT COUNT(*) FROM produk"
     )
     totalProduk = cursor.fetchone()[0]
 
+    # total transaksi hari ini
     cursor.execute("""
         SELECT COUNT(*)
         FROM transaksi
-        WHERE tanggal = CURDATE()
+        WHERE DATE(tanggal)=CURDATE()
     """)
     totalTransaksi = cursor.fetchone()[0]
 
-
+    # total pembelian hari ini
     cursor.execute("""
         SELECT COUNT(*)
         FROM pembelian
-        WHERE tanggal = CURDATE()
+        WHERE DATE(tanggal)=CURDATE()
     """)
     totalPembelian = cursor.fetchone()[0]
 
-
+    # stok bahan baku menipis
     cursor.execute("""
         SELECT *
-        FROM produk
-        WHERE stok <= 5
+        FROM bahanBaku
+        WHERE stok <= 100
     """)
     stokTipis = cursor.fetchall()
 
@@ -146,6 +148,7 @@ def kasir():
         'kasir/kasir.html',
         produk=dataProduk
     )
+
 # logout
 @app.route('/logout')
 def logout():
@@ -254,18 +257,20 @@ def struk(id_transaksi):
         detail=detail
     )
 
-# kelola produk -- admin
+# KELOLA PRODUK
+# halaman produk - admin
 @app.route('/kelola_produk')
 def kelola_produk():
 
     cursor = db.cursor()
 
-    cursor.execute(
-        "SELECT * FROM produk"
-    )
+    cursor.execute("""
+        SELECT *
+        FROM produk
+        ORDER BY idProduk asc
+    """)
 
     produk = cursor.fetchall()
-
 
     return render_template(
         'admin/kelola_produk.html',
@@ -276,172 +281,186 @@ def kelola_produk():
 def tambah_produk():
 
     namaProduk = request.form['namaProduk']
+    kategori = request.form['kategori']
     hargaJual = request.form['hargaJual']
-    stok = request.form['stok']
+    satuan = request.form['satuan']
+    tipeProduk = request.form['tipeProduk']
 
     cursor = db.cursor()
 
-    cursor.execute("""
+    query = """
         INSERT INTO produk
-        (namaProduk,hargaJual,stok)
-        VALUES(%s,%s,%s)
-    """,(
+        (
+            namaProduk,
+            kategori,
+            hargaJual,
+            satuan,
+            tipeProduk
+        )
+        VALUES (%s,%s,%s,%s,%s)
+    """
+
+    value = (
         namaProduk,
+        kategori,
         hargaJual,
-        stok
-    ))
+        satuan,
+        tipeProduk
+    )
+
+    cursor.execute(query, value)
 
     db.commit()
 
     return redirect('/kelola_produk')
-
-# @app.route('/edit_produk', methods=['POST'])
-# def edit_produk():
-
-#     idProduk = request.form['idProduk']
-#     namaProduk = request.form['namaProduk']
-#     hargaJual = request.form['hargaJual']
-#     stok = request.form['stok']
-
-#     cursor = db.cursor()
-
-#     cursor.execute("""
-#         UPDATE produk
-#         SET namaProduk=%s,
-#             hargaJual=%s,
-#             stok=%s
-#         WHERE idProduk=%s
-#     """,(
-#         namaProduk,
-#         hargaJual,
-#         stok,
-#         idProduk
-#     ))
-
-#     db.commit()
-
-#     return redirect('/kelola_produk')
 
 @app.route('/edit_produk', methods=['POST'])
 def edit_produk():
 
     idProduk = request.form['idProduk']
     namaProduk = request.form['namaProduk']
-
+    kategori = request.form['kategori']
     hargaJual = request.form['hargaJual']
-
-    stokBaru = int(
-        request.form['stok']
-    )
-
+    satuan = request.form['satuan']
+    tipeProduk = request.form['tipeProduk']
 
     cursor = db.cursor()
 
-
-    # stok lama
-    cursor.execute("""
-        SELECT stok
-        FROM produk
-        WHERE idProduk=%s
-    """,(idProduk,))
-
-    stokLama = cursor.fetchone()[0]
-
-
-    selisih = stokBaru - stokLama
-
-
-    # update produk utama
     cursor.execute("""
         UPDATE produk
-        SET namaProduk=%s,
+        SET
+            namaProduk=%s,
+            kategori=%s,
             hargaJual=%s,
-            stok=%s
+            satuan=%s,
+            tipeProduk=%s
         WHERE idProduk=%s
-    """,(
+    """, (
         namaProduk,
+        kategori,
         hargaJual,
-        stokBaru,
+        satuan,
+        tipeProduk,
         idProduk
     ))
 
-
-    # jika stok bertambah
-    if selisih > 0:
-
-
-        # contoh resep latte
-        if namaProduk == "Latte":
-
-
-            # kopi
-            cursor.execute("""
-                UPDATE produk
-                SET stok = stok - %s
-                WHERE namaProduk='Biji Kopi'
-            """,(selisih*10,))
-
-
-            # cup
-            cursor.execute("""
-                UPDATE produk
-                SET stok = stok - %s
-                WHERE namaProduk='Cup'
-            """,(selisih,))
-
-
-            # sirup
-            cursor.execute("""
-                UPDATE produk
-                SET stok = stok - %s
-                WHERE namaProduk='Sirup'
-            """,(selisih,))
-
-
-
-        elif namaProduk == "Americano":
-
-
-            cursor.execute("""
-                UPDATE produk
-                SET stok = stok - %s
-                WHERE namaProduk='Biji Kopi'
-            """,(selisih*10,))
-
-
-            cursor.execute("""
-                UPDATE produk
-                SET stok = stok - %s
-                WHERE namaProduk='Cup'
-            """,(selisih,))
-
-
     db.commit()
-
 
     return redirect('/kelola_produk')
 
 @app.route('/hapus_produk/<id>')
 def hapus_produk(id):
 
-    try:
+    cursor = db.cursor()
 
-        cursor = db.cursor()
+    cursor.execute("""
+        DELETE FROM produk
+        WHERE idProduk=%s
+    """, (id,))
 
-        cursor.execute(
-            "DELETE FROM produk WHERE idProduk=%s",
-            (id,)
-        )
-
-        db.commit()
-
-
-    except Exception as e:
-
-        return f"Produk tidak bisa dihapus: {e}"
-
+    db.commit()
 
     return redirect('/kelola_produk')
+
+
+# kelola resep produk
+@app.route('/resep/<int:idProduk>')
+def resep(idProduk):
+
+    cursor = db.cursor()
+
+    # ambil data produk
+    cursor.execute("""
+        SELECT *
+        FROM produk
+        WHERE idProduk = %s
+    """, (idProduk,))
+
+    produk = cursor.fetchone()
+
+    # jika produk tidak ada
+    if not produk:
+        return "Produk tidak ditemukan"
+
+    # ambil semua bahan baku
+    cursor.execute("""
+        SELECT *
+        FROM bahanBaku
+        ORDER BY namaBahan ASC
+    """)
+
+    bahan = cursor.fetchall()
+
+    # ambil resep produk
+    cursor.execute("""
+        SELECT
+            resep.idResep,
+            bahanBaku.namaBahan,
+            resep.jumlahPakai,
+            bahanBaku.satuan
+
+        FROM resep
+
+        JOIN bahanBaku
+        ON resep.idBahan = bahanBaku.idBahan
+
+        WHERE resep.idProduk = %s
+    """, (idProduk,))
+
+    dataResep = cursor.fetchall()
+
+    return render_template(
+        'admin/resep.html',
+        produk=produk,
+        bahan=bahan,
+        dataResep=dataResep
+    )
+
+@app.route('/tambah_resep', methods=['POST'])
+def tambah_resep():
+
+    idProduk = request.form['idProduk']
+    idBahan = request.form['idBahan']
+    jumlahPakai = request.form['jumlahPakai']
+
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO resep
+        (
+            idProduk,
+            idBahan,
+            jumlahPakai
+        )
+        VALUES
+        (
+            %s,
+            %s,
+            %s
+        )
+    """, (
+        idProduk,
+        idBahan,
+        jumlahPakai
+    ))
+
+    db.commit()
+
+    return redirect('/resep/' + idProduk)
+
+@app.route('/hapus_resep/<idResep>/<idProduk>')
+def hapus_resep(idResep, idProduk):
+
+    cursor = db.cursor()
+
+    cursor.execute("""
+        DELETE FROM resep
+        WHERE idResep=%s
+    """, (idResep,))
+
+    db.commit()
+
+    return redirect(f'/resep/{idProduk}')
 
 # kelola user -- admin
 @app.route('/kelola_user')
@@ -534,38 +553,239 @@ def edit_user():
 
     return redirect('/kelola_user')
 
-# inventory -- admin
-@app.route('/inventory')
-def inventory():
+
+
+# @app.route("/pembelian", methods=["GET", "POST"])
+# def pembelian():
+
+#     if request.method == "POST":
+
+#         nama_barang = request.form["nama_barang"]
+#         supplier = request.form["supplier"]
+
+#         qty = float(
+#             request.form["qty"]
+#         )
+
+#         satuan = request.form["satuan"]
+
+#         tipe = request.form["tipe"]
+
+#         harga_beli = int(
+#             request.form["harga_beli"]
+#         )
+
+
+#         # ====================
+#         # CONVERT SATUAN
+#         # ====================
+
+#         if satuan == "kg":
+
+#             qty = qty * 1000
+#             satuan = "gram"
+
+
+#         elif satuan == "liter":
+
+#             qty = qty * 1000
+#             satuan = "ml"
+
+
+#         subtotal = qty * harga_beli
+
+
+#         # ====================
+#         # HEADER PEMBELIAN
+#         # ====================
+
+#         pembelian_baru = Pembelian(
+
+#             tanggal=date.today(),
+
+#             total=subtotal,
+
+#             namaSupplier=supplier,
+
+#             idUser=session["idUser"]
+
+#         )
+
+#         db.session.add(
+#             pembelian_baru
+#         )
+
+#         db.session.flush()
+
+
+#         # ====================
+#         # BARANG LANGSUNG
+#         # ====================
+
+#         if tipe == "langsung":
+
+#             produk = produk.query.filter_by(
+
+#                 namaProduk=nama_barang
+
+#             ).first()
+
+
+#             if not produk:
+
+#                 return "Produk tidak ditemukan"
+
+
+#             produk.stok += qty
+
+
+#             detail = detailPembelian(
+
+#                 idPembelian=
+#                 pembelian_baru.idPembelian,
+
+#                 idProduk=
+#                 produk.idProduk,
+
+#                 tipeBarang=
+#                 "langsung",
+
+#                 jumlah=
+#                 qty,
+
+#                 hargaBeli=
+#                 harga_beli,
+
+#                 subtotal=
+#                 subtotal
+
+#             )
+
+
+#         # ====================
+#         # BAHAN RACIKAN
+#         # ====================
+
+#         else:
+
+#             bahan = bahanBaku.query.filter_by(
+
+#                 namaBahan=nama_barang
+
+#             ).first()
+
+
+#             if not bahan:
+
+#                 return "Bahan tidak ditemukan"
+
+
+#             bahan.stok += qty
+
+
+#             detail = detailPembelian(
+
+#                 idPembelian=
+#                 pembelian_baru.idPembelian,
+
+#                 idBahan=
+#                 bahan.idBahan,
+
+#                 tipeBarang=
+#                 "racikan",
+
+#                 jumlah=
+#                 qty,
+
+#                 hargaBeli=
+#                 harga_beli,
+
+#                 subtotal=
+#                 subtotal
+
+#             )
+
+
+#         db.session.add(
+#             detail
+#         )
+
+#         db.session.commit()
+
+
+#         return redirect(
+#             "/pembelian"
+#         )
+
+
+# @app.route("/inventory")
+# def inventory():
+
+#     barang_langsung = produk.query.filter_by(
+#         tipeProduk="langsung"
+#     ).all()
+
+
+#     bahan_racikan = bahanBaku.query.all()
+
+
+#     return render_template(
+
+#         "inventory.html",
+
+#         barang_langsung=barang_langsung,
+
+#         bahan_racikan=bahan_racikan
+
+#     )
+
+@app.route('/pembelian', methods=['GET', 'POST'])
+def pembelian():
+
+    if 'idUser' not in session:
+        return redirect('/')
+
+    if session['akses'] != "admin":
+        return "Akses ditolak"
 
     cursor = db.cursor()
 
+    if request.method == 'POST':
 
-    # barang
-    cursor.execute("""
-        SELECT *
-        FROM produk
-    """)
+        namaBarang = request.form['nama_barang']
+        supplier = request.form['supplier']
+        qty = request.form['qty']
+        satuan = request.form['satuan']
+        tipe = request.form['tipe']
 
-    produk = cursor.fetchall()
+        # INSERT KE TABEL BAHAN BAKU
+        cursor.execute("""
+            INSERT INTO bahanbaku
+            (
+                namaBahan,
+                stok,
+                satuan,
+                tipe
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s
+            )
+        """, (
+            namaBarang,
+            qty,
+            satuan,
+            tipe
+        ))
 
+        db.commit()
 
-    # history
-    cursor.execute("""
-        SELECT *
-        FROM pembelian
-        ORDER BY idPembelian DESC
-    """)
+        return redirect('/pembelian')
 
-    pembelian = cursor.fetchall()
-
-
-    return render_template(
-        'admin/inventory.html',
-
-        produk=produk,
-        pembelian=pembelian
-    )
+    return render_template('admin/pembelian.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
