@@ -12,13 +12,15 @@ app.secret_key = "kopiko123"
 
 # koneksi database
 db = mysql.connector.connect(
-    host="localhost",
+    host="127.0.0.1",
     user="root",
-    password="123",
-    database="db_kopiko2"
+    password="",
+    database="db_kopiko",
+    auth_plugin='mysql_native_password',
+    use_pure=True
 )
 
-cursor = db.cursor()
+cursor = db.cursor(buffered=True)
 
 # halaman awal
 @app.route('/')
@@ -73,7 +75,7 @@ def login():
 @app.route('/admin')
 def admin():
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     # total user
     cursor.execute(
@@ -124,14 +126,155 @@ def admin():
 # dashboard owner
 @app.route('/owner')
 def owner():
+
     if 'idUser' not in session:
         return redirect('/')
 
     if session['akses'] != "owner":
         return "Akses ditolak"
 
-    return render_template('owner.html')
+    cursor = db.cursor(buffered=True)
 
+    # total transaksi
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM transaksi
+    """)
+    totalTransaksi = cursor.fetchone()[0]
+
+    # total pendapatan
+    cursor.execute("""
+        SELECT IFNULL(SUM(total),0)
+        FROM transaksi
+    """)
+    totalPendapatan = cursor.fetchone()[0]
+
+    # total pembelian
+    cursor.execute("""
+        SELECT IFNULL(SUM(total),0)
+        FROM pembelian
+    """)
+    totalPembelian = cursor.fetchone()[0]
+
+    # laporan transaksi terbaru
+    cursor.execute("""
+        SELECT
+            idTransaksi,
+            tanggal,
+            total,
+            bayar,
+            kembalian
+        FROM transaksi
+        ORDER BY idTransaksi DESC
+        LIMIT 5
+    """)
+
+    laporan = cursor.fetchall()
+
+    return render_template(
+        'owner/owner.html',
+        totalTransaksi=totalTransaksi,
+        totalPendapatan=totalPendapatan,
+        totalPembelian=totalPembelian,
+        laporan=laporan
+    )
+
+
+# pendapatan owner
+@app.route('/pendapatan_owner')
+def pendapatan_owner():
+    return render_template('owner/pendapatan_owner.html')
+
+# laporan owner
+@app.route('/laporan_owner')
+def laporan_owner():
+
+    if 'idUser' not in session:
+        return redirect('/')
+
+    if session['akses'] != "owner":
+        return "Akses ditolak"
+
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("""
+        SELECT
+            idTransaksi,
+            tanggal,
+            total,
+            bayar,
+            kembalian
+        FROM transaksi
+        ORDER BY idTransaksi DESC
+    """)
+
+    laporan = cursor.fetchall()
+
+    return render_template(
+        'owner/laporan_owner.html',
+        laporan=laporan
+    )
+
+
+# statistika owner
+@app.route('/statistika_owner')
+def statistika_owner():
+
+    if 'idUser' not in session:
+        return redirect('/')
+
+    if session['akses'] != "owner":
+        return "Akses ditolak"
+
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM transaksi
+    """)
+
+    totalTransaksi = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM pembelian
+    """)
+
+    totalPembelian = cursor.fetchone()[0]
+
+    return render_template(
+        'owner/statistika_owner.html',
+        totalTransaksi=totalTransaksi,
+        totalPembelian=totalPembelian
+    )
+
+
+# pembelian owner
+@app.route('/pembelian_owner')
+def pembelian_owner():
+
+    if 'idUser' not in session:
+        return redirect('/')
+
+    if session['akses'] != "owner":
+        return "Akses ditolak"
+
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("""
+        SELECT *
+        FROM pembelian
+        ORDER BY idPembelian DESC
+    """)
+
+    pembelian = cursor.fetchall()
+
+    return render_template(
+        'owner/pembelian_owner.html',
+        pembelian=pembelian
+    )
+
+    
 # dashboard kasir
 @app.route('/kasir')
 def kasir():
@@ -141,7 +284,7 @@ def kasir():
     if session['akses'] != "kasir":
         return "Akses ditolak"
     
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("SELECT * FROM produk")
     dataProduk = cursor.fetchall()
@@ -228,7 +371,7 @@ def simpan_transaksi():
 @app.route('/struk/<id_transaksi>')
 def struk(id_transaksi):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     # header transaksi
     cursor.execute("""
@@ -264,7 +407,7 @@ def struk(id_transaksi):
 @app.route('/kelola_produk')
 def kelola_produk():
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         SELECT *
@@ -288,7 +431,7 @@ def tambah_produk():
     satuan = request.form['satuan']
     tipeProduk = request.form['tipeProduk']
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     query = """
         INSERT INTO produk
@@ -326,7 +469,7 @@ def edit_produk():
     satuan = request.form['satuan']
     tipeProduk = request.form['tipeProduk']
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         UPDATE produk
@@ -353,7 +496,7 @@ def edit_produk():
 @app.route('/hapus_produk/<id>')
 def hapus_produk(id):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         DELETE FROM produk
@@ -369,7 +512,7 @@ def hapus_produk(id):
 @app.route('/resep/<int:idProduk>')
 def resep(idProduk):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     # ambil data produk
     cursor.execute("""
@@ -425,7 +568,7 @@ def tambah_resep():
     idBahan = request.form['idBahan']
     jumlahPakai = request.form['jumlahPakai']
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         INSERT INTO resep
@@ -453,7 +596,7 @@ def tambah_resep():
 @app.route('/hapus_resep/<idResep>/<idProduk>')
 def hapus_resep(idResep, idProduk):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         DELETE FROM resep
@@ -468,7 +611,7 @@ def hapus_resep(idResep, idProduk):
 @app.route('/kelola_user')
 def kelola_user():
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute(
         "SELECT * FROM pengguna"
@@ -490,7 +633,7 @@ def tambah_user():
     akses = request.form['akses']
 
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
 
     cursor.execute("""
@@ -513,7 +656,7 @@ def hapus_user(id):
 
     try:
 
-        cursor = db.cursor()
+        cursor = db.cursor(buffered=True)
 
         cursor.execute(
             "DELETE FROM pengguna WHERE idUser=%s",
@@ -536,7 +679,7 @@ def edit_user():
     sandi = request.form['sandi']
     akses = request.form['akses']
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         UPDATE pengguna
@@ -558,8 +701,8 @@ def edit_user():
 @app.route('/pembelian')
 def pembelian():
 
-    cursor = db.cursor()
-
+    cursor = db.cursor(buffered=True)
+    
     cursor.execute("""
         SELECT
             p.idPembelian,
@@ -595,7 +738,7 @@ def pembelian():
 @app.route('/simpan_pembelian', methods=['POST'])
 def simpan_pembelian():
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     tanggal = date.today()
 
@@ -705,7 +848,7 @@ def simpan_pembelian():
 @app.route('/hapus_pembelian/<id>')
 def hapus_pembelian(id):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     cursor.execute("""
         DELETE FROM pembelian
@@ -719,7 +862,7 @@ def hapus_pembelian(id):
 @app.route('/edit_pembelian/<id>', methods=['POST'])
 def edit_pembelian(id):
 
-    cursor = db.cursor()
+    cursor = db.cursor(buffered=True)
 
     namaSupplier = request.form['namaSupplier']
     namaBarang = request.form['namaBarang']
@@ -763,5 +906,7 @@ def edit_pembelian(id):
 
     return redirect('admin/pembelian')
 
+
 if __name__ == '__main__':
     app.run(debug=True)
+
