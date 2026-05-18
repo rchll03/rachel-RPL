@@ -2,18 +2,109 @@
 <html>
 <head>
     <title>Dashboard Owner</title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            background:#f3f3f3;
+            padding:20px;
+        }
+
+        .box{
+            background:white;
+            padding:20px;
+            margin-bottom:20px;
+            border-radius:10px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .card-container{
+            display:flex;
+            gap:20px;
+        }
+
+        .card{
+            flex:1;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        table th, table td{
+            border:1px solid #ddd;
+            padding:10px;
+        }
+
+        table th{
+            background:#eee;
+        }
+
+    </style>
 </head>
 <body>
 
-    <h1>Dashboard Owner</h1>
+    <div class="box">
+        <h1>Dashboard Owner</h1>
+    </div>
 
-    <h3>Fitur Owner:</h3>
+    <div class="card-container">
 
-    <ul>
-        <li>Lihat Laporan</li>
-        <li>Lihat Pendapatan</li>
-        <li>Lihat Statistik</li>
-    </ul>
+        <div class="card">
+            <h3>Total Transaksi</h3>
+            <h1>{{ totalTransaksi }}</h1>
+        </div>
+
+        <div class="card">
+            <h3>Total Pendapatan</h3>
+            <h1>Rp {{ totalPendapatan }}</h1>
+        </div>
+
+        <div class="card">
+            <h3>Total Pembelian</h3>
+            <h1>Rp {{ totalPembelian }}</h1>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="box">
+
+        <h2>Laporan Transaksi</h2>
+
+        <table>
+
+            <tr>
+                <th>ID</th>
+                <th>Tanggal</th>
+                <th>Total</th>
+                <th>Bayar</th>
+                <th>Kembalian</th>
+            </tr>
+
+            {% for x in laporan %}
+
+            <tr>
+                <td>{{ x[0] }}</td>
+                <td>{{ x[1] }}</td>
+                <td>{{ x[2] }}</td>
+                <td>{{ x[3] }}</td>
+                <td>{{ x[4] }}</td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
 
 </body>
 </html>

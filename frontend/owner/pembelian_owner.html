@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pembelian Owner</title>
+</head>
+
+<style>
+
+    body{
+        background:#f4f4f4;
+        font-family:Arial;
+        padding:30px;
+    }
+
+    .box{
+        background:white;
+        padding:20px;
+        border-radius:10px;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:20px;
+    }
+
+    th, td{
+        border:1px solid #ccc;
+        padding:10px;
+        text-align:center;
+    }
+
+    th{
+        background:#ffc107;
+    }
+
+</style>
+
+<body>
+
+<div class="box">
+
+    <h1>Data Pembelian</h1>
+
+    <table>
+
+        <tr>
+            <th>ID</th>
+            <th>Tanggal</th>
+            <th>Total</th>
+        </tr>
+
+        {% for x in pembelian %}
+        <tr>
+            <td>{{ x[0] }}</td>
+            <td>{{ x[1] }}</td>
+            <td>{{ x[2] }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+    <br>
+
+    <a href="/owner">
+        ← Kembali
+    </a>
+
+</div>
+
+</body>
+</html>

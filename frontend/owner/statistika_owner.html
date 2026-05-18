@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Statistik Owner</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body{
+            font-family:Arial;
+            background:#f4f4f4;
+            padding:30px;
+        }
+
+        .box{
+            display:flex;
+            gap:20px;
+            margin-bottom:30px;
+        }
+
+        .card{
+            flex:1;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            text-align:center;
+        }
+
+        .chart{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+        }
+    </style>
+
+</head>
+<body>
+
+<h1>Statistik Owner</h1>
+
+<div class="box">
+
+    <div class="card">
+        <h3>Total Transaksi</h3>
+        <h1>{{ totalTransaksi }}</h1>
+    </div>
+
+    <div class="card">
+        <h3>Total Pembelian</h3>
+        <h1>{{ totalPembelian }}</h1>
+    </div>
+
+    <div class="card">
+        <h3>Total Pendapatan</h3>
+        <h1>{{ totalPendapatan }}</h1>
+    </div>
+
+</div>
+
+<div class="chart">
+
+    <h2>Grafik Pendapatan</h2>
+
+    <canvas id="grafik"></canvas>
+
+</div>
+
+
+<script>
+
+new Chart(document.getElementById("grafik"), {
+
+    type:'bar',
+
+    data:{
+        labels: {{ bulan|tojson }},
+        datasets:[{
+            label:'Pendapatan',
+            data: {{ pendapatan|tojson }}
+        }]
+    }
+
+});
+
+</script>
+
+</body>
+</html>

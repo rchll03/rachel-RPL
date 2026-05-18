@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pendapatan Owner</title>
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial;
+        }
+
+        body{
+            background:#f4f4f4;
+            padding:30px;
+        }
+
+        .container{
+            width:90%;
+            margin:auto;
+        }
+
+        .box{
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            text-align:center;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1{
+            margin-bottom:20px;
+        }
+
+        h2{
+            font-size:40px;
+            color:green;
+        }
+
+        .back{
+            display:inline-block;
+            margin-top:20px;
+            text-decoration:none;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="box">
+
+        <h1>Total Pendapatan</h1>
+
+        <h2>
+            Rp {{ totalPendapatan }}
+        </h2>
+
+        <a href="/owner" class="back">
+            ← Kembali
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

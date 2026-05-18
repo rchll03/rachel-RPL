@@ -9,6 +9,7 @@ app = Flask(__name__,
             static_folder='../frontend/assets'
     )
 app.secret_key = "kopiko123"
+print("TEMPLATE:", app.template_folder)
 
 # koneksi database
 db = mysql.connector.connect(
@@ -183,7 +184,20 @@ def owner():
 # pendapatan owner
 @app.route('/pendapatan_owner')
 def pendapatan_owner():
-    return render_template('owner/pendapatan_owner.html')
+
+    cursor = db.cursor(buffered=True)
+
+    cursor.execute("""
+        SELECT IFNULL(SUM(total),0)
+        FROM transaksi
+    """)
+
+    totalPendapatan = cursor.fetchone()[0]
+
+    return render_template(
+        'owner/pendapatan_owner.html',
+        totalPendapatan=totalPendapatan
+    )
 
 # laporan owner
 @app.route('/laporan_owner')
@@ -223,29 +237,44 @@ def statistika_owner():
     if 'idUser' not in session:
         return redirect('/')
 
-    if session['akses'] != "owner":
-        return "Akses ditolak"
-
     cursor = db.cursor(buffered=True)
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM transaksi
-    """)
-
+    # total transaksi
+    cursor.execute("SELECT COUNT(*) FROM transaksi")
     totalTransaksi = cursor.fetchone()[0]
 
+    # total pembelian
+    cursor.execute("SELECT COUNT(*) FROM pembelian")
+    totalPembelian = cursor.fetchone()[0]
+
+    # total pendapatan
+    cursor.execute("SELECT IFNULL(SUM(total),0) FROM transaksi")
+    totalPendapatan = cursor.fetchone()[0]
+
+    # data grafik per bulan
     cursor.execute("""
-        SELECT COUNT(*)
-        FROM pembelian
+        SELECT MONTH(tanggal), SUM(total)
+        FROM transaksi
+        GROUP BY MONTH(tanggal)
+        ORDER BY MONTH(tanggal)
     """)
 
-    totalPembelian = cursor.fetchone()[0]
+    data = cursor.fetchall()
+
+    bulan = []
+    pendapatan = []
+
+    for x in data:
+        bulan.append(str(x[0]))
+        pendapatan.append(int(x[1]))
 
     return render_template(
         'owner/statistika_owner.html',
         totalTransaksi=totalTransaksi,
-        totalPembelian=totalPembelian
+        totalPembelian=totalPembelian,
+        totalPendapatan=totalPendapatan,
+        bulan=bulan,
+        pendapatan=pendapatan
     )
 
 
@@ -891,7 +920,7 @@ def edit_pembelian(id):
         SET
             idBahan = %s,
             jumlah = %s,
-            hargaBeli = %s,
+            hargaBeli = %sS,
             subtotal = %s
         WHERE idPembelian = %s
     """, (
